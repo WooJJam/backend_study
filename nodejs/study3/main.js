@@ -1,36 +1,78 @@
 const express = require('express') // express module
 const app = express() // new express app
-const port = 5000 // port
-const bodyParser = require('body-parser');
-const {User} = require("./models/User");
+const port = 4000 // port
+const bodyParser = require('body-parser')
+const cookies = require('cookie-parser')
 
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(bodyParser.json());
-
-const mongoose = require('mongoose')
-mongoose.connect('mongodb+srv://jaemin5548:dnwoals1011@study2.999l4bh.mongodb.net/?retryWrites=true&w=majority', ).then(() => console.log('MongoDB connect..')).catch(err => console.log(err))
+app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.json())
+app.use(cookies())
 
 app.get('/', (req, res) => res.send('Hello World'))
 
-app.post('/register', (req, res) => {
+// HTML 파일 전송
+app.get('/v1/index/', (req, res) => {
+    res.sendfile("./lib/template.html");
+})
 
-    // 회원 가입 할때 필요한 정보들을 client에서 가져오면
-    // 그것들을 DB에 넣어줌.
+// POSTMAN
+app.post('/v1/index/', (req, res) => {
+    console.log("Hi Postman");
+    res.json("Hi Postman!");
+})
 
-    // {
-    //     id:"hello",
-    //     password:"123"
-    // } -> req.body 에는 이런 내용들이 담겨있다.
+// 저장된 쿠키 가져오기
+app.get('/v1/cookie', (req, res) => {
+    res.json(req.cookies);
+})
 
-    const user = new User(req.body);
+// User 쿠키 생성
+app.post('/v1/cookie/login', (req, res) => {
+    var cookieKey = req.body.user;
+    if(req.cookies.user) {
+        res.send(`HI ${req.cookies.user}`);
+    }else {
+        res.cookie('user', cookieKey);
+        res.send("Cookie Set!");
+    }
+})
 
-    user.save((err, userInfo) => {
-        if(err) return res.json({ success:false, err})
-        return res.status(200).json({
-            success:true
-        })
-    })
+// 쿠키 수정 및 생성
+app.post('/v1/cookie/modify', (req, res) => {
+    var content = req.body;
+    var cokkey = content.key;
+    var cokval = content.value;
+    var ckeckcnt = 0;
+    for(key in req.cookies) {
+        if(key == cokkey) {
+            res.cookie(cokkey, cokval, {overwrite:true});
+            res.send("쿠키 수정완료!");
+        }else {
+            ckeckcnt++;
+        }
+    }
+    if(ckeckcnt == (Object.keys(req.cookies).length)) {
+        res.cookie(cokkey, cokval);
+        res.send("쿠키 생성완료!");
+    }
+})
 
+// 쿠키 삭제
+app.post('/v1/cookie/withdrawl', (req, res) => {
+    cok = req.body;
+    ckeckcnt = 0;
+    coki = Object.values(cok);
+    for(key in req.cookies) {
+        if(key == coki) {
+            res.clearCookie(key);
+            res.send("withdrawl!");;
+        }else {
+            ckeckcnt++;
+        }
+    }
+    if(ckeckcnt == Object.keys(req.cookies).length) {
+        res.send("Not Cookie!!");
+    }
 })
 
 app.listen(port, () => console.log(`Example app listening on port ${port}`))
