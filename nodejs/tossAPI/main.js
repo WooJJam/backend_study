@@ -34,20 +34,20 @@ app.get('/success', async (req,res) => {
     var orderid = req.query.orderId;
     var paymentkey = req.query.paymentKey;
     let amount = parseInt(req.query.amount);
-
+    const base64encoding = await Buffer.from('test_sk_BE92LAa5PVb1k6O7p4W37YmpXyJj:').toString('base64');
     console.log(orderid);
     console.log(paymentkey);
     console.log(amount);
 
-    const result = await axios.post('https://api.tosspayments.com/v1/payments/confirm', null, {
+    
+    const result = await axios.post("https://api.tosspayments.com/v1/payments/confirm", {
+        paymentKey: paymentkey,
+        orderId: orderid,
+         amount: amount
+    }, {
     headers: {
         'Content-Type': 'application/json',
-        'Authorization' : 'Basic dGVzdF9za19CRTkyTEFhNVBWYjFrNk83cDRXMzdZbXBYeUpqOg=='
-    },
-    params:{
-        "paymentKey": 'xMBvpmjnoD4yKeq5bgrp59DJ1gkjZX8GX0lzW6YOQJ1w9NLR',
-        "orderId":'AD8aZDpbzXs4EQa-UkIX6',
-        "amount": 18667
+        'Authorization' : `Basic ${base64encoding}`
     }
     })
     console.log(result);
@@ -108,6 +108,7 @@ app.get('/toss', async (req, res) => {
     .catch(err => console.log(err));
 
     res.render('index', {
+        orderid :product._id,
         price: product.price,
         name: product.name,
         seller: product.seller
