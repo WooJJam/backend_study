@@ -6,6 +6,8 @@ const historySchema = new Schema({
     orderName: String,
     paymentKey: String,
     totalAmount: Number,
+    status: String,
+    approvedAt: Date,
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'User'

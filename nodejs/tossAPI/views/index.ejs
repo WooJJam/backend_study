@@ -13,11 +13,12 @@
     <p>가격 : <%= price %> 원 </p>
     <p>품명 : <%= name %>
     <button id = "pay-button"><%= price %>원 결제하기</button> </p>
+    <h1><%= orderid %></h1>
 
     <input type = "hidden" id="seller" value = "<%= seller %>">
     <input type = "hidden" id="price" value = "<%= price %>">
     <input type = "hidden" id="name" value = "<%= name %>">
-    <input type="hidden" id="orderid" value = "<%= orderid %>">
+    <input type = "hidden" id="orderid" value = "<%= orderid %>">
 
     <script>
     
@@ -33,7 +34,6 @@
         
     button.addEventListener('click', function() {
         tossPayments.requestPayment('카드',{
-            // method: '카드',
             amount: price,
             orderId: orderid,
             orderName: name,

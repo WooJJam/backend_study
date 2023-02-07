@@ -8,7 +8,11 @@ const connect = require("./Schema/index");
 const Product = require("./Schema/Product");
 const User = require("./Schema/User");
 const axios = require('axios');
+const History = require('./Schema/History');
 var express_session = require('express-session');
+const mailer = require("nodemailer");
+
+require('dotenv').config();
 
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
@@ -18,6 +22,34 @@ app.set('views', './views');
 
 connect();
 
+async function RandomString() {
+    return await Math.random().toString(36).substr(2,11);
+}
+
+async function sendMail(to, amount, orderid) {
+    const transporter = await mailer.createTransport({
+        service: 'naver',
+        host: 'smtp.naver.com',
+        port: 465,
+         auth: {
+            user: process.env.NAVER_EMAIL,
+            pass: process.env.NAVER_PASSWORD
+        },
+    });
+    
+    var mailOptions = {
+        from: process.env.NAVER_EMAIL,
+        to: to,
+        subject: 'Toss Payment Complete! Jaemin',
+        html : `<h4>총 금액: ${amount}<h4>
+                <h4>주문번호: ${orderid}<h4>` 
+    };
+    
+    await transporter.sendMail(mailOptions, function(err, info) {
+        if(err) console.log(err);
+    });
+}
+
 app.use(express_session({
     secret: "secretKey",
     resave: false,
@@ -25,37 +57,13 @@ app.use(express_session({
     store:require('mongoose-session')(mongoose),
 }))
 
-// app.get('/', (req,res) => {
-//     res.render('succes.ejs');
-// })
-
-app.get('/success', async (req,res) => {
-
-    var orderid = req.query.orderId;
-    var paymentkey = req.query.paymentKey;
-    let amount = parseInt(req.query.amount);
-    const base64encoding = await Buffer.from('test_sk_BE92LAa5PVb1k6O7p4W37YmpXyJj:').toString('base64');
-    console.log(orderid);
-    console.log(paymentkey);
-    console.log(amount);
-
-    
-    const result = await axios.post("https://api.tosspayments.com/v1/payments/confirm", {
-        paymentKey: paymentkey,
-        orderId: orderid,
-         amount: amount
-    }, {
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization' : `Basic ${base64encoding}`
-    }
-    })
-    console.log(result);
-    res.render('succes.ejs');
-})
-
-app.get('/failed', (req,res) => {
-    res.render("<h1>실패ㅠ<h1>");
+app.get('/', (req,res) => {
+    console.log(req.session);
+   
+    res.render('main.ejs', {
+        email : req.session.email,
+        orderid : req.session._id
+    });
 })
 
 app.post('/register', async(req,res) => {
@@ -80,63 +88,92 @@ app.post('/register', async(req,res) => {
     }
 })
 
+app.get("/login", (req, res)=> {
+    res.render("login.ejs");
+})
+
 app.post("/login", (req, res) => {
     var email = req.body.email;
     var password = req.body.password;
 
     User.findOne({email: email, password: password}).exec((err, result) => {
+        console.log(result);
         if(result != null) {
+            req.session._id = result._id;
             req.session.email = email;
-            res.send(email+"님 로그인!");
-        }else {
-            res.send("존재하지 않는 회원정보 입니다.");
+            console.log("로그인 성공!");
+            res.redirect('/');
+        } else {
+            console.log("존재하지 않는 회원정보 입니다.");
         }
     })
 })
 
-getRandomUser = async function () {
+app.get('/failed', (req,res) => {
+    res.render("<h1>실패ㅠ<h1>");
+})
+
+getRandomProduct = async function () {
     const count = await Product.countDocuments();
     const random = Math.floor(Math.random() * count);
     return Product.findOne().skip(random)
 }
 
 app.get('/toss', async (req, res) => {
-    await getRandomUser()
-    .then(user => {
-        product = user
+
+    await getRandomProduct()
+    .then(result => {
+        product = result
     })
     .catch(err => console.log(err));
 
+    const randomOrderid = await RandomString();
+
     res.render('index', {
-        orderid :product._id,
+        orderid : randomOrderid,
         price: product.price,
         name: product.name,
         seller: product.seller
     })
 })
 
-// app.get('/payment', (req,res) => {
-//     res.render('tosspayments.ejs');
-// })
+app.get('/success', async (req,res) => {
 
-// app.get('/payment', (req, res) => {
+    var orderid = req.query.orderId;
+    var paymentkey = req.query.paymentKey;
+    let amount = parseInt(req.query.amount);
+    const base64encoding = await Buffer.from('test_sk_BE92LAa5PVb1k6O7p4W37YmpXyJj:').toString('base64');
+    
+    const result = await axios.post("https://api.tosspayments.com/v1/payments/confirm", {
+        paymentKey: paymentkey,
+        orderId: orderid,
+        amount: amount
+    }, {
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization' : `Basic ${base64encoding}`
+    }
+    })
 
-//     loadPaymentWidget(clientKey, customerKey).then(paymentWidget => {
-//         paymentWidget.renderPaymentMethods('#payment-method', 15000);
-//         paymentWidget.requestPayment({
-//             orderId: 'AD8aZDpbzXs4EQa-UkIX6',
-//             orderName: '토스 티셔츠 외 2건',
-//             successUrl: 'http://localhost:4000',
-//             failUrl: 'http://localhost:8080/failed',customerEmail: 'jaemin5548@naver.com', customerName: '우재민'
-//         })
-//     })
-// })
+    const history = await new History({
+        orderId: result.data.orderName,
+        orderName : result.data.orderId,
+        paymentKey : result.data.paymentKey,
+        totalAmount : result.data.totalAmount,
+        userId : req.session._id,
+        status : result.data.status,
+        approvedAt : result.data.approvedAt
+    })
+    history.save();
+    await sendMail(req.session.email, result.data.totalAmount, result.data.orderId);
+    res.render('succes.ejs');
+})
 
-app.post('/testingProduct', (req, res) => {
+app.post('/testingProduct', async(req, res) => {
     const seed = req.body.seed;
     var productList = new Array();
 
-    faker.mersenne.rand(seed);
+    await faker.seed(seed);
 
     for(var i=0; i<100; i++) {
         var data = new Object;
@@ -156,6 +193,14 @@ app.post('/testingProduct', (req, res) => {
         product.save();
     }
     res.json(productList);
+})
+
+app.get('/payments', async (req, res) => {
+    const result = await History.find(
+        {"userId" : req.session._id},
+        {_id:0, status:1, orderName:1, approvedAt:1, paymentKey:1}
+    )
+    res.send(result);
 })
 
 app.listen(port, () => console.log("Server Connected.."));
