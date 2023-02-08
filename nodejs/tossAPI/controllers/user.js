@@ -44,7 +44,6 @@ exports.postLogin = (req, res) => {
 }
 
 exports.home =  (req,res) => {
-    console.log(req.session);
    
     res.render('main.ejs', {
         email : req.session.email,
