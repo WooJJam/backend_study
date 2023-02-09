@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>console.log(axios);</script>
+    <title>Main</title>
+</head>
+<body>
+    <input id="id" type="text" value="data">
+    <button onClick="aclick()">button</button>
+    
+    <script>
+        axios.get("http://localhost:4000/axios")
+        .then(response => console.log(response.data))
+    </script>
+
+    <script>
+        function aclick() {
+            alert(document.getElementById("id").value);
+        }
+    </script>
+</body>
+</html>
