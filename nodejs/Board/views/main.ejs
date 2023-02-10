@@ -10,18 +10,6 @@
     <title>Main</title>
 </head>
 <body>
-    <input id="id" type="text" value="data">
-    <button onClick="aclick()">button</button>
-    
-    <script>
-        axios.get("http://localhost:4000/axios")
-        .then(response => console.log(response.data))
-    </script>
-
-    <script>
-        function aclick() {
-            alert(document.getElementById("id").value);
-        }
-    </script>
+    <%= id %>님이 로그인 중!
 </body>
 </html>
