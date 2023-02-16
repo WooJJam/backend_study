@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>글 목록</title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+</head>
+<body>
+    <h1>글 목록</h1>
+    <!-- <a href="/board/write">글쓰기</a> -->
+    <table border="1">
+        <tr>
+            <td>번호</td>
+            <td>작성자</td>
+            <td>제목</td>
+            <td>내용</td>
+            <td>등록일</td>
+        </tr>
+        <%
+        for(var i=0; i<list.length; i++)
+        {
+            var data = list[i];
+            var name = writer[i];
+        %>
+        <tr>
+            <td><%=data.id%></td>
+            <td><%=name.nickname%></td>
+            <!-- <td><a href="/board/read/<%=data.idx%>"><%=data.title%></a></td> -->
+            <td><%=data.subject%></td>
+            <td><%=data.content%></td>
+            <td><%=data.createdAt%></td>
+        </tr>
+        <%}%>
+    </table>
+    </body>
+</html>
