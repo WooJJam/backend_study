@@ -24,12 +24,13 @@
         <tr>
             <td><%=data.id%></td>
             <td><%=name.nickname%></td>
-            <!-- <td><a href="/board/read/<%=data.idx%>"><%=data.title%></a></td> -->
-            <td><%=data.subject%></td>
+            <td><a href="/board/<%=data.id%>"><%=data.subject%></a></td>
             <td><%=data.content%></td>
             <td><%=data.createdAt%></td>
         </tr>
         <%}%>
     </table>
+    <a href="/board/register">글 등록</a>
+    <a href="/main">홈</a>
     </body>
 </html>

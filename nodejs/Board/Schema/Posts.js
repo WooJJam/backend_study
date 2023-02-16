@@ -9,7 +9,10 @@ const postSchema = new Schema({
     작성일
     작성자 -> 외래키
     */
-    id : Number,
+    _id :{ 
+        type:Number,
+        unique:true
+    },
     subject: String,
     content: String,
     createdAt:  {

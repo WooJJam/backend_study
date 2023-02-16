@@ -34,6 +34,7 @@ app.get('/', (req,res) => {
 })
 
 app.get('/main', (req, res) => {
+    console.log(req.session);
     // if(req.session.email) {
         res.render('main.ejs', {
             id: req.session.email
@@ -125,6 +126,7 @@ app.get('/board/register', (req,res) => {
 })
 
 app.post('/board/register', async(req,res) => {
+
     var subject = req.body.subject;
     var content = req.body.content;
     var email = req.session.email;
@@ -138,33 +140,36 @@ app.post('/board/register', async(req,res) => {
     totalPost = (data.total + 1);   
 
     const post = await new Post({
-        id : totalPost,
+        _id : totalPost,
         subject : subject,
         content : content,
         writer : writer
     })
     post.save();
 
-    const counter = await Counter.updateOne({name:"게시물"}, {total: totalPost})
+    await Counter.updateOne({name:"게시물"}, {total: totalPost})
+
+    res.redirect('/board/list');
 
 })
 
 app.get('/board/list', async(req,res) => {
 
     let list;
-    var info = new Object();
     var writer = new Array();
 
      await Post.find({},{id:1, subject:1, content:1, createdAt:1, writer:1})
     .then(data =>  list = data);
 
-    console.log(list);
+    // console.log(list);
 
     for(var i=0; i<list.length; i++) {
-        await User.findOne({_id:list[i].writer},{})
+        var info = new Object();
+        await User.find({_id:list[i].writer},{})
         .then(userInfo => {
-            info.nickname = userInfo.nickname;
+            info.nickname = userInfo[0].nickname;
             writer.push(info);
+            // console.log(info);
         });
     }
 
@@ -176,12 +181,36 @@ app.get('/board/list', async(req,res) => {
     });
 })
 
-app.get('/board/delete', (req,res) => {
-    res.render('board_delete.ejs');
+app.get('/board/:boardid/delete', async(req,res) => {
+    let {boardid} = req.params;
+    const userinfo = await User.findOne({email:req.session.email},{});
+    const postinfo = await Post.findOne({_id:boardid});
+
+    if(await (userinfo._id).equals(postinfo.writer)) {
+        await Post.findByIdAndDelete(boardid);
+        res.json({
+            delete: "OK"
+        })
+    }else {
+        res.json({
+            delete: "NOK"
+        })
+    }
 })
 
-// app.post('/board/delete', (req, res)=> {
-    
-// })
+app.get('/board/:boardid', async (req, res)=> {
+    var boardid = req.params.boardid;
+    var post;
+
+    await Post.findOne({_id:boardid},{id:1, subject:1, content:1, createdAt:1, writer:1})
+    .then(data =>  post = data);
+
+    const writer = await User.findOne({_id:post.writer},{});
+
+    res.render('content.ejs', {
+        post: post,
+        writer: writer
+    });
+})
 
 app.listen(port, () => console.log("server Connected..."));
