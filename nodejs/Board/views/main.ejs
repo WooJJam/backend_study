@@ -14,6 +14,15 @@
     <%= id %>님이 로그인 중!
     <a href="/logout">로그아웃</a>
     <a href="/board/list">게시판</a>
+    <% if(profile) { %>}
+        <img src =<%= profile%> height="280" width="180">
+    <% } %>
+    <h5>프로필 이미지 설정
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="imgFile">
+            <input type="submit" value="파일 업로드하기">
+        </form>
+    </h5>
     <% } else { %>
         로그인이 필요합니다!
         <a href="/login">로그인</a>

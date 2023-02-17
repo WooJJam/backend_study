@@ -9,9 +9,32 @@ const express_session = require('express-session');
 const mongoose = require('mongoose');
 const Post = require('./Schema/Posts');
 const Counter = require('./Schema/Counter');
+const multer = require('multer');
+const aws = require('aws-sdk');
+const multer_s3 = require('multer-s3');
+require('dotenv').config();
 
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
+
+const s3 = new aws.S3({
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    region: 'ap-northeast-2'
+})
+
+let upload = multer({
+    storage : multer_s3({
+        s3: s3,
+        bucket: 'jaeminbucket',
+        ContentType: multer_s3.AUTO_CONTENT_TYPE,
+        acl: 'public-read',
+        key: (req, file, cb) =>{
+            cb(null, `test/${Date.now()}_${file.originalname}`);
+        }
+        
+    })
+})
 
 connect();
 
@@ -21,6 +44,8 @@ app.use(express_session({
     saveUninitialized: false,
     store:require('mongoose-session')(mongoose),
 }));
+
+app.use('/uploads', express.static('uploads'));
 
 app.set('view engine', 'ejs');
 app.set('views', './views');
@@ -33,12 +58,21 @@ app.get('/', (req,res) => {
     res.redirect('/main');
 })
 
-app.get('/main', (req, res) => {
+app.get('/main', async (req, res) => {
     console.log(req.session);
-    // if(req.session.email) {
+
+    if(req.session.email) {
+        const result = await User.findOne({email: req.session.email})
+            res.render('main.ejs', {
+                id: req.session.email,
+                profile: result.profile
+            })
+        }
+    else{
         res.render('main.ejs', {
             id: req.session.email
         })
+    }
     // }
 })
 
@@ -161,8 +195,6 @@ app.get('/board/list', async(req,res) => {
      await Post.find({},{id:1, subject:1, content:1, createdAt:1, writer:1})
     .then(data =>  list = data);
 
-    // console.log(list);
-
     for(var i=0; i<list.length; i++) {
         var info = new Object();
         await User.find({_id:list[i].writer},{})
@@ -211,6 +243,27 @@ app.get('/board/:boardid', async (req, res)=> {
         post: post,
         writer: writer
     });
+})
+
+
+app.post('/upload', upload.single('imgFile'), async (req,res) => {
+    console.log(req.file);
+
+    const result_profile = await User.findOne({email:req.session.email})
+
+    await s3.deleteObject({
+        Bucket: 'jaeminbucket', // 삭제하고 싶은 이미지가 있는 버킷 이름
+        Key: "test" + result_profile.profile.split('test')[1], // 삭제하고 싶은 이미지의 key 
+      }, (err, data) => {
+           if (err) console.log(err); // 실패 시 에러 메시지
+           else console.log(data); // 성공 시 데이터 출력
+      });
+
+    await User.updateOne({email:req.session.email}, {profile: req.file.location});
+
+
+    res.redirect('/main');
+
 })
 
 app.listen(port, () => console.log("server Connected..."));
