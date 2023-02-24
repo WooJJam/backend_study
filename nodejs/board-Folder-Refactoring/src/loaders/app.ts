@@ -29,7 +29,7 @@ export class App {
     public async init(port:number): Promise<void> {
         try{
             routingUseContainer(Container);
-            useExpressServer(this.app,routingControllerOptions);
+            useExpressServer(this.app, routingControllerOptions);
 
             this.app.listen(port, () =>{
                 console.log(`${port} Server Connected..`)
