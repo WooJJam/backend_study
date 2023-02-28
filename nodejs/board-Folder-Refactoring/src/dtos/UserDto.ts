@@ -24,5 +24,14 @@ export class CreateUserDto{
     @IsNotEmpty()
     @IsString()
     public nickname:string;
+}
 
+export class LoginUserDto{
+    @IsNotEmpty()
+    @IsString()
+    public id: string;
+
+    @IsNotEmpty()
+    @IsString()
+    public pw:string;
 }

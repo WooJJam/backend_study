@@ -10,12 +10,21 @@ import {
     useExpressServer,
   } from "routing-controllers";
   import { routingControllerOptions } from "../utils/RoutingConfig";
+import express_session from "express-session";
+import mongoose from "mongoose";
+
 
 // declare module "express-session" {
 //     interface SessionData{
 //         userId : String
 //     }
 // }
+
+declare module 'express-session' {
+    interface SessionData {
+        email: string,
+    }
+}
 
 export class App {
     public app:express.Application;
@@ -26,30 +35,9 @@ export class App {
         this.setMiddlewares();
     }
 
-    public async init(port:number): Promise<void> {
-        try{
-            routingUseContainer(Container);
-            useExpressServer(this.app, routingControllerOptions);
-
-            this.app.listen(port, () =>{
-                console.log(`${port} Server Connected..`)
-                // const user = new User({
-                //     email: "1234@123",
-                //     password: "1234",
-                //     name: "나 우재민",
-                //     phone: "01011",
-                //     nickname: "우잼잼잼",
-                // })
-                // user.save();
-            });
-        } catch(err) {
-            console.log(err);
-        }
-    }
-
     private async setDatabase():Promise<void> {
         try {
-            sync();
+            await sync();
         }catch(err) {
             console.log(err);
         }
@@ -58,5 +46,27 @@ export class App {
     private setMiddlewares(): void {
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({extended:false}));
+        this.app.use(express_session({
+            secret: "secretKey",
+            resave: false,
+            saveUninitialized: false,
+            store:require('mongoose-session')(mongoose),
+        }));
+    }
+
+    public async init(port:number): Promise<void> {
+        try{
+            routingUseContainer(Container);
+            useExpressServer(this.app, routingControllerOptions);
+
+            this.app.engine('html', require('ejs').renderFile);
+            this.app.set('view engine', 'ejs');
+
+            this.app.listen(port, () =>{
+                console.log(`${port} Server Connected..`)
+            });
+        } catch(err) {
+            console.log(err);
+        }
     }
 }

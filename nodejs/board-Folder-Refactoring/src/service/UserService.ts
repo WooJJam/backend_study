@@ -1,5 +1,5 @@
 import {Service} from "typedi";
-import { CreateUserDto } from '../dtos/UserDto';
+import { CreateUserDto, LoginUserDto } from '../dtos/UserDto';
 import { UserRepository } from "../repositories/userRepositories";
 
 @Service()
@@ -13,5 +13,9 @@ export class UserService{
             }else {
                 return ("nok");
             }
+        }
+
+        public async login(loginUserDto: LoginUserDto) {
+            return await this.userRepositoriy.login(loginUserDto);
         }
 }
