@@ -6,6 +6,8 @@ import { CreateUserDto, LoginUserDto } from '../dtos/UserDto';
 import { Request, Response } from 'express';
 import { checkLogin } from '../middlewares/AuthMiddleware';
 import { before } from 'node:test';
+import axios from 'axios';
+require("dotenv").config();
 
 @JsonController('/auth') // /auth/register 에서 auth
 @Service() // Container에 담기 위해서 써줘야함
@@ -15,9 +17,10 @@ export class UserController{
 
     @HttpCode(200)
     @Get('/')
-public async main(@Req() req:Request) {
-    return req.session;
-}
+
+    public async main(@Req() req:Request) {
+        return req.session;
+    }
 
     @HttpCode(200)
     @Post('/register')
@@ -32,7 +35,6 @@ public async main(@Req() req:Request) {
     public async login() {
         return ;
     }
-
 
     @HttpCode(200)
     @Post('/login')
@@ -65,4 +67,28 @@ public async main(@Req() req:Request) {
             message: "Complete"
         }
     }
-}   
+
+    @HttpCode(200)
+    @Get('/socialLogin')
+    @Render('kakao_login.ejs')
+    public async socialLogin() {
+        return 
+    }
+
+    @HttpCode(200)
+    @Get('/kakao/callback')
+    public async kakaoLoginUser(@QueryParam ('code') code: string) {
+        const kakaoInfo = await this.userSerivce.kakaoLogin(code);
+        console.log(kakaoInfo);
+        return kakaoInfo;
+    }
+
+    @HttpCode(200)
+    @Get('/naver/callback')
+    public async naverLogin(@QueryParam('code') code: string) {
+        const naverInfo = await this.userSerivce.naverLogin(code);
+        console.log(naverInfo);
+        return naverInfo;
+    }
+    // public async kakaoLogin
+}

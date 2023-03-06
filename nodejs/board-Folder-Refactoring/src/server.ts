@@ -1,5 +1,5 @@
 import { App } from './loaders/app'
-const port: number = 5000;
+const port: number = 9500;
 
 try{
     const app = new App();
