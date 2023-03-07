@@ -6,5 +6,4 @@ try{
     app.init(port);
 } catch(err) {
     console.log(err);
-    console.log("123");
 }
