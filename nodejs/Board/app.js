@@ -18,8 +18,8 @@ app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
 
 const s3 = new aws.S3({
-    accessKeyId: process.env.ACCESS_KEY_ID,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    accessKeyId: "AKIA55Z7GU6JRN6OIY7E",
+    secretAccessKey: "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",
     region: 'ap-northeast-2'
 })
 

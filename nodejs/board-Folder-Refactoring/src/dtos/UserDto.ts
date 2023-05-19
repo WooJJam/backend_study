@@ -35,3 +35,21 @@ export class LoginUserDto{
     @IsString()
     public pw:string;
 }
+
+export class EmailVerify{
+    // @IsNotEmpty()
+    // @IsString()
+    // public email: string;
+
+    @IsNotEmpty()
+    @IsString()
+    public to: string;
+
+    @IsNotEmpty()
+    @IsString()
+    public subject: string;
+
+    @IsNotEmpty()
+    @IsString()
+    public content: string;
+}

@@ -2,11 +2,13 @@ import {Service} from 'typedi';
 import 'reflect-metadata';
 import { Body, Delete, Get, HttpCode, JsonController, Render, Param, Patch, Post, QueryParam, Req, Res, Session, SessionParam, UseBefore} from 'routing-controllers';
 import {UserService} from "../service/UserService";
-import { CreateUserDto, LoginUserDto } from '../dtos/UserDto';
+import { CreateUserDto, EmailVerify, LoginUserDto } from '../dtos/UserDto';
 import { Request, Response } from 'express';
 import { checkLogin } from '../middlewares/AuthMiddleware';
 import { before } from 'node:test';
 import axios from 'axios';
+import mailer from 'nodemailer';
+
 require("dotenv").config();
 
 @JsonController('/auth') // /auth/register 에서 auth
@@ -90,5 +92,40 @@ export class UserController{
         console.log(naverInfo);
         return naverInfo;
     }
-    // public async kakaoLogin
+
+    @HttpCode(200)
+    @Post('/sendmail')
+    public async emailVerify(@Body()emailVerify: EmailVerify) {
+        const verifyNum = Math.floor(Math.random() * 100000).toString().padStart(6,'5');
+        const transporter = mailer.createTransport({
+            service: 'gmail',
+            host: 'smtp.naver.com',
+            port: 465,
+            auth: {
+                user: '',
+                pass: ''
+            },
+        });
+
+        var subject = emailVerify.subject;
+        var to = emailVerify.to
+        var content = emailVerify.content;
+
+        var mailOptions = {
+            from: '',
+            to: to,
+            subject: subject,
+            html : `<h1>${verifyNum}</h1>`,
+
+        };
+
+        transporter.sendMail(mailOptions, (err, info) => {
+            if(err) console.log(err);
+            else {
+                console.log('content: '+ info);
+            }
+        })
+        console.log(verifyNum);
+        return mailOptions;
+    }
 }

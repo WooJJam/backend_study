@@ -3,7 +3,8 @@ import express from "express";
 import "express-session";
 import { Container } from "typedi";
 // import { User } from "../models";
-import sync from "./database";
+import DataSource from "./database";
+import {User} from '../entities';
 import bodyParser from "body-parser";
 import {
     useContainer as routingUseContainer,
@@ -11,7 +12,7 @@ import {
   } from "routing-controllers";
   import { routingControllerOptions } from "../utils/RoutingConfig";
 import express_session from "express-session";
-import mongoose from "mongoose";
+import database from '../loaders/database';
 
 
 // declare module "express-session" {
@@ -36,22 +37,23 @@ export class App {
     }
 
     private async setDatabase():Promise<void> {
-        try {
-            await sync();
-        }catch(err) {
-            console.log(err);
+        try{
+            await DataSource.initialize().then(()=>console.log('Mysql Connect!')).catch(err=>console.log(err))
+        }
+        catch(error){
+            console.log(error);
         }
     }
     
     private setMiddlewares(): void {
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({extended:false}));
-        this.app.use(express_session({
-            secret: "secretKey",
-            resave: false,
-            saveUninitialized: false,
-            store:require('mongoose-session')(mongoose),
-        }));
+        // this.app.use(express_session({
+        //     secret: "secretKey",
+        //     resave: false,
+        //     saveUninitialized: false,
+        //     store:require('mongoose-session')(mongoose),
+        // }));
     }
 
     public async init(port:number): Promise<void> {

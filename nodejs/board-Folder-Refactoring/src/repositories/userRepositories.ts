@@ -30,3 +30,16 @@ export class UserRepository{
             }
     }
 }
+
+export class TestRepository{
+    public async create() {
+        const user = await new Test({
+            email : createUserDto.email,
+            password : createUserDto.password,
+            name : createUserDto.name,
+            phone: createUserDto.phone,
+            nickname: createUserDto.nickname
+        })
+        // user.save();
+        return 'OK';
+    }
